@@ -16,7 +16,7 @@ Supported Metrics:
 - flops
 - param_size
 
-The details of all listed metrics please refer [].
+The details of all listed metrics please refer [Metrics_Documents](https://github.com/Tiaspetto/zero_cost_perf/blob/main/documents/metrics.md).
 
 ## Prepare Enviroments
 1. Install Samsung Zero-cost-nas package, we have done some modify in this repo to support our new metrics ssnr
@@ -40,7 +40,7 @@ pip install gpustat
 
 ## Example
 
-```
+```python
 from netperf impor get_model_perf_info
 from dataloaders.dataloader import define_dataloader
 from utils import pick_gpu_lowest_memory
