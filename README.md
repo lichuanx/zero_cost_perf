@@ -41,7 +41,7 @@ pip install gpustat
 ## Example
 
 ```python
-from netperf impor get_model_perf_info
+from netperf import get_model_perf_info
 from dataloaders.dataloader import define_dataloader
 from utils import pick_gpu_lowest_memory
 import torchvision.models as models
