@@ -1,7 +1,7 @@
 import os
 import torch
 import torchvision.datasets as dset 
-import data_utils as utils
+import dataloaders.data_utils as utils
 
 def define_dataloader(dataset='CIFAR10', data='data', batch_size=64):
     if dataset == 'CIFAR10':
