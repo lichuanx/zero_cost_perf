@@ -15,7 +15,7 @@ def define_dataloader(dataset='CIFAR10', data='data', batch_size=64):
     elif dataset == 'SVHN':
         train_transform, valid_transform = utils._data_transforms_svhn()
         train_data = dset.SVHN(root=data, split='train', download=True, transform=train_transform)
-        valid_data = dset.SVHN(root=ata, split='test', download=True, transform=valid_transform)
+        valid_data = dset.SVHN(root=data, split='test', download=True, transform=valid_transform)
     elif dataset == 'imagenet16-120':
         import torchvision.transforms as transforms
         from .DownsampledImageNet import ImageNet16
