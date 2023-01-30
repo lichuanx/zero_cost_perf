@@ -42,13 +42,14 @@ pip install gpustat
 
 ```python
 from netperf import get_model_perf_info
-from dataloaders.dataloader import define_dataloader
+from dataloaders.dataloaders import define_dataloader
 from utils import pick_gpu_lowest_memory
 import torchvision.models as models
 
 n_classes=10
 device= pick_gpu_lowest_memory()
-net =  net = models.densenet161()
+net = models.densenet161()
+net.to(device)
 loader = define_dataloader(dataset='CIFAR10', data='data', batch_size=64)
 
 #default metrics will include['params', 'flops']
