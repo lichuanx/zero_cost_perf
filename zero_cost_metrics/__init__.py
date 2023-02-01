@@ -4,7 +4,7 @@ from foresight.pruners import predictive
 from zero_cost_metrics.naswot import get_naswot
 from zero_cost_metrics.ntk import get_ntk_n
 from zero_cost_metrics.zen import zennas_score
-
+from zero_cost_metrics.naswot_layers import get_naswot_layerwise 
 ZC_COLLECTIONS=[
     'grad_norm',
     'snip',
@@ -16,7 +16,8 @@ ZC_COLLECTIONS=[
     'naswot',
     'zen',
     'ntk',
-    'ssnr'
+    'ssnr',
+    'nwot_ssnr'
 ]
 
 def score_network(metric, model,train_queue,n_classes, device):
@@ -45,7 +46,28 @@ def score_network(metric, model,train_queue,n_classes, device):
                 s = torch.sum(s)/torch.std(s)
 
             scores.append(s.cpu().numpy())
-        return np.sum(scores) 
+        return np.sum(scores)
+    elif metric == 'nwot_ssnr':
+        input, target = next(iter(train_queue))
+        nwots = get_naswot_layerwise(model, input, target, device)
+        measures = predictive.find_measures(model,
+                                train_queue,
+                                ('random', 1, n_classes), 
+                                device,
+                                measure_names=['synflow'], aggregate=False)
+        measures = measures['synflow']
+        #return measures
+        scores = []
+        for i in range(len(measures)):
+            s = measures[i].detach().view(-1) 
+            if torch.std(s) == 0:
+                s = torch.sum(s)
+            else:
+                s = torch.sum(s)/torch.std(s)
+            s = s * nwots[i]
+
+            scores.append(s.cpu().numpy())
+        return np.sum(scores)
     else:
         measures = predictive.find_measures(model,
                                     train_queue,
