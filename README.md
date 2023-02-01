@@ -16,7 +16,7 @@ Supported Metrics:
 - flops
 - param_size
 
-The details of all listed metrics please refer [].
+The details of all listed metrics please refer [Metrics_Documents](https://github.com/Tiaspetto/zero_cost_perf/blob/main/documents/metrics.md).
 
 ## Prepare Enviroments
 1. Install Samsung Zero-cost-nas package, we have done some modify in this repo to support our new metrics ssnr
@@ -40,15 +40,16 @@ pip install gpustat
 
 ## Example
 
-```
-from netperf impor get_model_perf_info
-from dataloaders.dataloader import define_dataloader
+```python
+from netperf import get_model_perf_info
+from dataloaders.dataloaders import define_dataloader
 from utils import pick_gpu_lowest_memory
 import torchvision.models as models
 
 n_classes=10
 device= pick_gpu_lowest_memory()
-net =  net = models.densenet161()
+net = models.densenet161()
+net.to(device)
 loader = define_dataloader(dataset='CIFAR10', data='data', batch_size=64)
 
 #default metrics will include['params', 'flops']
