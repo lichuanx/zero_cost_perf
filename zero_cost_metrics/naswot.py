@@ -11,7 +11,8 @@ def get_naswot(model, input, target, device):
     model = copy.deepcopy(model)
     model.eval()
     batch_size = input.shape[0]
-    model.K = torch.zeros(batch_size, batch_size).cuda()
+    # model.K = torch.zeros(batch_size, batch_size).cuda()
+    model.K = torch.zeros(batch_size, batch_size).to(device=device)
 
     def counting_forward_hook(module, inp, out):
         try:

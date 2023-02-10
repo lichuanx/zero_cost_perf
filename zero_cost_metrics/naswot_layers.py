@@ -20,19 +20,25 @@ def get_naswot_layerwise(model, input, target, device):
             x = (out > 0).float()
             K = x @ x.t()
             if x.cpu().numpy().sum() == 0:
-                model.K_dict[module.name] = 0
+                # model.K_dict[module.name] = 0
+                model.K_dict[module.alias] = 0
             else:
                 K2 = (1.-x) @ (1.-x.t())
                 matrix = K + K2
-                model.K_dict[module.name] = hooklogdet(matrix.cpu().numpy())
+                # model.K_dict[module.name] = hooklogdet(matrix.cpu().numpy())
+                abslogdet = hooklogdet(matrix.cpu().numpy())
+                model.K_dict[module.alias] = 0. if np.isneginf(abslogdet) else abslogdet #TODO: -inf
         except:
             pass
 
+
     for name, module in model.named_modules():
         if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear) or isinstance(module, nn.Conv1d):
+            module.alias = name
             module.register_forward_hook(counting_forward_hook)
     
-    input = input.cuda(device=device)
+    # input = input.cuda(device=device)
+    input = input.to(device=device)
     with torch.no_grad():
         model(input)
     scores = []
