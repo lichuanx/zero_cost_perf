@@ -72,11 +72,11 @@ def score_network(metric, model,train_queue,n_classes, device):
         return np.sum(scores)
     elif metric == 'nwot_ptb':
         input, target = next(iter(train_queue))
-        nwots, accum_mats, accum_mats_logdet = get_naswot_perturbation_layerwise(model, input, target, device)
-        return np.sum(accum_mats_logdet)
+        nwots, accum_mats_logdet, accum_mats_logdetimp = get_naswot_perturbation_layerwise(model, input, target, device)
+        return np.sum(accum_mats_logdetimp)
     elif metric == 'nwot_ptb_ssnr':
         input, target = next(iter(train_queue))
-        nwots, accum_mats, accum_mats_logdet = get_naswot_perturbation_layerwise(model, input, target, device)
+        nwots, accum_mats_logdet, accum_mats_logdetimp = get_naswot_perturbation_layerwise(model, input, target, device)
         measures = predictive.find_measures(model,
                                 train_queue,
                                 ('random', 1, n_classes), 
@@ -91,7 +91,7 @@ def score_network(metric, model,train_queue,n_classes, device):
                 s = torch.sum(s)
             else:
                 s = torch.sum(s)/torch.std(s)
-            s = s * accum_mats_logdet[i]
+            s = s * accum_mats_logdetimp[i]
 
             scores.append(s.cpu().numpy())
         return np.sum(scores)

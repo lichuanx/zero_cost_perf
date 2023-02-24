@@ -85,7 +85,7 @@ def get_naswot_perturbation_layerwise(model, input, target, device) -> tuple[lis
                 # model.K_dict[module.name] = hooklogdet(matrix.cpu().numpy())
                 abslogdet = hooklogdet(matrix.cpu().numpy())
                 model.K_dict[module.alias] = 0. if np.isneginf(abslogdet) else abslogdet #TODO: -inf
-                model.K_accum_mats.append(zeros_mat if (len(model.K_accum_mats) == 0) else (model.K_accum_mats[-1]+matrix))
+                model.K_accum_mats.append(matrix if (len(model.K_accum_mats) == 0) else (model.K_accum_mats[-1]+matrix))
             model.K_accum_mats_logdet.append(safe_hooklogdet(model.K_accum_mats[-1].cpu().numpy()))
         except:
             pass
@@ -105,6 +105,25 @@ def get_naswot_perturbation_layerwise(model, input, target, device) -> tuple[lis
         if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear) or isinstance(module, nn.Conv1d):
             scores.append(model.K_dict[name])
     #scores = copy.deepcopy(scores)
+    accum_mats = model.K_accum_mats
+    accum_mats_logdet = model.K_accum_mats_logdet
+    # magical calc here||||
+    a_ori = accum_mats_logdet.copy() 
+    a_before = a_ori[:-1]
+    a_after = a_ori[1:]
+    a_diff = [i-j for (i,j) in zip(a_after, a_before)] # calc subtraction between neighbour elements.
+    a_diff.insert(0, 0) # ensure all models' first layer has the same default importance of 0.
+    accum_mats_logdet_imp = a_diff
+    # # print(scores, accum_mats, accum_mats_logdet, a_diff)
+    # print('-'*20)
+    # print(scores)
+    # print('-'*20)
+    # print(accum_mats_logdet)
+    # print('-'*20)
+    # print(a_diff)
+    # print('-'*20)
     del model
     del input
-    return scores, model.K_accum_mats, model.K_accum_mats_logdet
+    # return scores, accum_mats, accum_mats_logdet
+    # return scores, None, accum_mats_logdet, accum_mats_logdet_imp
+    return scores, accum_mats_logdet, accum_mats_logdet_imp
