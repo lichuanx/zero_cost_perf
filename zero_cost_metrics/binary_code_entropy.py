@@ -15,7 +15,7 @@ def relative_entropy(batch):
     - relative_entropy: a scalar value representing the relative entropy within the batch
     """
     # Convert batch to a numpy array of integers
-    batch_int = batch.dot(1 << np.arange(batch.shape[1] - 1, -1, -1))
+    batch_int = batch.dot(1 << np.arange(batch.shape[1] - 1, -1, -1))  # TODO:bug here, outbound
 
     # Count the number of occurrences of each integer in the batch
     counts = np.bincount(batch_int)
@@ -45,7 +45,7 @@ def get_bentropy_layerwise(model, input, target, device):
         # try:
         out = out.view(out.size(0), -1)
         x = (out > 0).int()
-        model.entropy_dict[module.alias] = relative_entropy(x)
+        model.entropy_dict[module.alias] = relative_entropy(x.cpu().numpy())
         # except:
         #     pass
 
