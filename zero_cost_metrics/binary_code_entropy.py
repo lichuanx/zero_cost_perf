@@ -3,15 +3,6 @@ import numpy as np
 import torch.nn as nn
 import copy 
 
-def hooklogdet(K, labels=None):
-    s, ld = np.linalg.slogdet(K)
-    return ld
-
-
-def safe_hooklogdet(K):
-    s, ld = np.linalg.slogdet(K)
-    return 0 if (np.isneginf(ld) and s==0) else ld
-
 
 def relative_entropy(batch):
     """
@@ -51,12 +42,12 @@ def get_bentropy_layerwise(model, input, target, device):
     model.entropy_dict = {}
 
     def counting_forward_hook(module, inp, out):
-        try:
-            out = out.view(out.size(0), -1)
-            x = (out > 0).int()
-            model.entropy_dict[module.alias] = relative_entropy(x)
-        except:
-            pass
+        # try:
+        out = out.view(out.size(0), -1)
+        x = (out > 0).int()
+        model.entropy_dict[module.alias] = relative_entropy(x)
+        # except:
+        #     pass
 
 
     for name, module in model.named_modules():
@@ -64,14 +55,13 @@ def get_bentropy_layerwise(model, input, target, device):
             module.alias = name
             module.register_forward_hook(counting_forward_hook)
     
-    # input = input.cuda(device=device)
     input = input.to(device=device)
     with torch.no_grad():
         model(input)
     scores = []
     for name, module in model.named_modules():
         if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear) or isinstance(module, nn.Conv1d):
-            scores.append(model.K_dict[name])
+            scores.append(model.entropy_dict[name])
     #scores = copy.deepcopy(scores)
     del model
     del input

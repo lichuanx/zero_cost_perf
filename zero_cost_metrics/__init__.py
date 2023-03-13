@@ -5,6 +5,8 @@ from zero_cost_metrics.naswot import get_naswot
 from zero_cost_metrics.ntk import get_ntk_n
 from zero_cost_metrics.zen import zennas_score
 from zero_cost_metrics.naswot_layers import get_naswot_layerwise, get_naswot_perturbation_layerwise, get_naswot_mats_cache_layerwise
+from zero_cost_metrics.naswot_norm import get_norm_naswot_layerwise
+from zero_cost_metrics.binary_code_entropy import get_bentropy_layerwise
 ZC_COLLECTIONS=[
     'grad_norm',
     'snip',
@@ -21,6 +23,9 @@ ZC_COLLECTIONS=[
     'nwot_ptb',
     'nwot_ptb_ssnr',
     'accum_nwot_ssnr',
+    'lnwot_norm',
+    'bce',
+    'bce_ssnr',
 ]
 
 def score_network(metric, model,train_queue,n_classes, device):
@@ -114,6 +119,35 @@ def score_network(metric, model,train_queue,n_classes, device):
             else:
                 s = torch.sum(s)/torch.std(s)
             s = s * accum_mats_logdetimp[i]
+
+            scores.append(s.cpu().numpy())
+        return np.sum(scores)
+    elif metric == 'lnwot_norm':
+        input, target = next(iter(train_queue))
+        scores = get_norm_naswot_layerwise(model, input, target, device)
+        return np.sum(scores)
+    elif metric == 'bce':
+        input, target = next(iter(train_queue))
+        scores = get_bentropy_layerwise(model, input, target, device)
+        return np.sum(scores)
+    elif metric == 'bce_ssnr':
+        input, target = next(iter(train_queue))
+        bces = get_bentropy_layerwise(model, input, target, device)
+        measures = predictive.find_measures(model,
+                                train_queue,
+                                ('random', 1, n_classes), 
+                                device,
+                                measure_names=['synflow'], aggregate=False)
+        measures = measures['synflow']
+        #return measures
+        scores = []
+        for i in range(len(measures)):
+            s = measures[i].detach().view(-1) 
+            if torch.std(s) == 0:
+                s = torch.sum(s)
+            else:
+                s = torch.sum(s)/torch.std(s)
+            s = s * bces[i]
 
             scores.append(s.cpu().numpy())
         return np.sum(scores)
